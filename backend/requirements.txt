@@ -3,3 +3,6 @@ uvicorn
 rawpy
 Pillow
 python-multipart
+imageio
+numpy
+opencv-python

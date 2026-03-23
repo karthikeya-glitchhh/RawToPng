@@ -12,6 +12,7 @@ import os
 import imageio
 import numpy as np
 import cv2
+from typing import List
 
 app = FastAPI()
 
@@ -119,6 +120,68 @@ async def convert_raw_to_png(file: UploadFile = File(...)):
         buffer = io.BytesIO()
         create_info_image(f"Error: {str(e)[:50]}").save(buffer, format="PNG")
         return JSONResponse(content={"png_data": f"data:image/png;base64,{base64.b64encode(buffer.getvalue()).decode('utf-8')}", "filename": "error.png"})
+
+@app.post("/convert/jpeg-to-png")
+async def jpeg_to_png(file: UploadFile = File(...)):
+    try:
+        content = await file.read()
+        img = Image.open(io.BytesIO(content))
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
+        img_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        return JSONResponse(content={
+            "data": f"data:image/png;base64,{img_str}",
+            "filename": file.filename.rsplit(".", 1)[0] + ".png"
+        })
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/convert/png-to-jpeg")
+async def png_to_jpeg(file: UploadFile = File(...)):
+    try:
+        content = await file.read()
+        img = Image.open(io.BytesIO(content))
+        # Handle transparency
+        if img.mode in ('RGBA', 'LA'):
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[-1])
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+            
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=95)
+        img_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        return JSONResponse(content={
+            "data": f"data:image/jpeg;base64,{img_str}",
+            "filename": file.filename.rsplit(".", 1)[0] + ".jpg"
+        })
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/convert/images-to-pdf")
+async def images_to_pdf(files: List[UploadFile] = File(...)):
+    try:
+        images = []
+        for file in files:
+            content = await file.read()
+            img = Image.open(io.BytesIO(content))
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            images.append(img)
+        
+        if not images:
+            raise HTTPException(status_code=400, detail="No images uploaded")
+            
+        buffer = io.BytesIO()
+        images[0].save(buffer, format="PDF", save_all=True, append_images=images[1:])
+        pdf_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        return JSONResponse(content={
+            "data": f"data:application/pdf;base64,{pdf_str}",
+            "filename": "converted_images.pdf"
+        })
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
