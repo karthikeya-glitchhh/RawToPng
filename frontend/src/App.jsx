@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Image as ImageIcon, Download, RefreshCw, X, AlertCircle, FileType, FileText, ChevronRight } from 'lucide-react';
 import './App.css';
+import emmetraLogo from './assets/emmetra_logo.svg';
 
 const tools = [
   { id: 'raw-to-png', name: 'RAW to PNG', icon: <ImageIcon size={20} />, description: 'Professional RAW frames' },
@@ -134,10 +135,7 @@ function App() {
       
       <header>
         <div className="logo">
-          <div className="logo-icon">
-            <ImageIcon size={32} color="#8b5cf6" />
-          </div>
-          <h1>Raw<span>Snap</span></h1>
+          <img src={emmetraLogo} alt="Emmetra" height="48" />
         </div>
         <p className="subtitle">Professional image conversion with intelligent processing</p>
       </header>
@@ -295,7 +293,7 @@ function App() {
       </main>
 
       <footer>
-        <p>© 2026 RawSnap Engine • Professional Image Tools</p>
+        <p>© 2026 Emmetra Engine • Professional Image Tools</p>
       </footer>
     </div>
   );
